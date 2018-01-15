@@ -28,10 +28,10 @@ function getCurrentTabUrl(callback) {
     // See https://developer.chrome.com/extensions/tabs#type-Tab
     var url = tab.url;
 
-    // tab.url is only available if the "activeTab" permission is declared.
+    // tab.url is only available if the 'activeTab' permission is declared.
     // If you want to see the URL of other tabs (e.g. after removing active:true
-    // from |queryInfo|), then the "tabs" permission is required to see their
-    // "url" properties.
+    // from |queryInfo|), then the 'tabs' permission is required to see their
+    // 'url' properties.
     console.assert(typeof url == 'string', 'tab.url should be a string');
 
     callback(url);
@@ -44,7 +44,7 @@ function getCurrentTabUrl(callback) {
   // chrome.tabs.query(queryInfo, (tabs) => {
   //   url = tabs[0].url;
   // });
-  // alert(url); // Shows "undefined", because chrome.tabs.query is async.
+  // alert(url); // Shows 'undefined', because chrome.tabs.query is async.
 }
 
 /**
@@ -53,10 +53,10 @@ function getCurrentTabUrl(callback) {
  * @param {string} color The new background color.
  */
 function changeBackgroundColor(color) {
-  var script = 'document.body.style.backgroundColor="' + color + '";';
+  var script = 'document.body.style.backgroundColor=' + color + ';';
   // See https://developer.chrome.com/extensions/tabs#method-executeScript.
   // chrome.tabs.executeScript allows us to programmatically inject JavaScript
-  // into a page. Since we omit the optional first argument "tabId", the script
+  // into a page. Since we omit the optional first argument 'tabId', the script
   // is inserted into the active tab of the current window, which serves as the
   // default.
   chrome.tabs.executeScript({
@@ -95,13 +95,36 @@ function saveBackgroundColor(url, color) {
   chrome.storage.sync.set(items);
 }
 
+function handleAdd() {
+  const addButton = document.getElementById('addCurrentComic');
+  container = document.getElementsByClassName('container');
+  addButton.onclick = () => {
+    getCurrentTabUrl((url) => {
+      console.log(url, container);
+      const newComic = document.createElement(`
+        <div class="wrapper">
+          <img src="http://readcomiconline.to/Uploads/Etc/4-12-2017/32567443071108.jpg">
+          <a href="` + url + `">Batman</a>
+          <span class="fa fa-trash"></span>
+        </div>
+      `);
+      container.appendChild(newComic);
+    });
+  }
+
+  getCurrentTabUrl((url) => {
+    const dropdown = document.getElementById('dropdown');
+
+  });
+}
+
 function handleNavigation() {
-  const links = document.getElementsByTagName("a");
+  const links = document.getElementsByTagName('a');
   for (let i = 0; i < links.length; i++) {
     (() => {
       const ln = links[i];
       const location = ln.href;
-      ln.onclick = function () {
+      ln.onclick = () => {
           chrome.tabs.create({active: true, url: location});
       };
     })();
@@ -109,13 +132,12 @@ function handleNavigation() {
 }
 
 function handleDelete() {
-  const trashes = document.getElementsByClassName("fa-trash");
+  const trashes = document.getElementsByClassName('fa-trash');
   for (let i = 0; i < trashes.length; i++) {
     (() => {
       const trash = trashes[i];
       trash.onclick = function () {
         const removable = trash.parentNode;
-        console.log('remove');
         removable.parentNode.removeChild(removable);
       };
     })();
@@ -123,6 +145,7 @@ function handleDelete() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  handleAdd();
   handleNavigation();
   handleDelete();
   getCurrentTabUrl((url) => {

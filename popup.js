@@ -95,19 +95,38 @@ function saveBackgroundColor(url, color) {
   chrome.storage.sync.set(items);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  var links = document.getElementsByTagName("a");
-  for (var i = 0; i < links.length; i++) {
+function handleNavigation() {
+  const links = document.getElementsByTagName("a");
+  for (let i = 0; i < links.length; i++) {
     (() => {
-      var ln = links[i];
-      var location = ln.href;
+      const ln = links[i];
+      const location = ln.href;
       ln.onclick = function () {
           chrome.tabs.create({active: true, url: location});
       };
     })();
   }
+}
+
+function handleDelete() {
+  const trashes = document.getElementsByClassName("fa-trash");
+  for (let i = 0; i < trashes.length; i++) {
+    (() => {
+      const trash = trashes[i];
+      trash.onclick = function () {
+        const removable = trash.parentNode;
+        console.log('remove');
+        removable.parentNode.removeChild(removable);
+      };
+    })();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  handleNavigation();
+  handleDelete();
   getCurrentTabUrl((url) => {
-    var dropdown = document.getElementById('dropdown');
+    const dropdown = document.getElementById('dropdown');
 
     // Load the saved background color for this page and modify the dropdown
     // value, if needed.

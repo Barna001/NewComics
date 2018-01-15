@@ -1,2 +1,3 @@
 # NewComics
-This extension allows the user to add pages from readcomiconline.to and notifies if new Issues are added.
+This extension helps you tracking your favourite comics.
+You can add comic pages from readcomiconline.to like http://readcomiconline.to/Comic/Injustice-2 and it notifies you if new Issues are added.

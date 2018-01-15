@@ -4,14 +4,24 @@
     "name": "NewComics",
     "description": "This extension allows the user to add pages from readcomiconline.to and notifies if new Issues are added.",
     "version": "1.0",
-  
-    "browser_action": {
-      "default_icon": "icon.png",
+    
+    "background": {
+      "scripts": ["popup.js"],
+      "persistent": false
+    },
+
+    "page_action": {
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "24": "icons/icon24.png",
+        "32": "icons/icon32.png"
+      },
       "default_popup": "popup.html",
       "default_title": "NewComics"
     },
     "permissions": [
       "activeTab",
-      "storage"
+      "storage",
+      "declarativeContent"
     ]
   }

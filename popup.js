@@ -96,6 +96,16 @@ function saveBackgroundColor(url, color) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  var links = document.getElementsByTagName("a");
+  for (var i = 0; i < links.length; i++) {
+    (() => {
+      var ln = links[i];
+      var location = ln.href;
+      ln.onclick = function () {
+          chrome.tabs.create({active: true, url: location});
+      };
+    })();
+  }
   getCurrentTabUrl((url) => {
     var dropdown = document.getElementById('dropdown');
 

@@ -8,43 +8,18 @@
  * @param {function(string)} callback called when the URL of the current tab
  *   is found.
  */
-function getCurrentTabUrl(callback) {
-  // Query filter to be passed to chrome.tabs.query - see
-  // https://developer.chrome.com/extensions/tabs#method-query
-  var queryInfo = {
-    active: true,
-    currentWindow: true
-  };
+function getCurrentTabInfos(callback) {
 
-  chrome.tabs.query(queryInfo, (tabs) => {
-    // chrome.tabs.query invokes the callback with a list of tabs that match the
-    // query. When the popup is opened, there is certainly a window and at least
-    // one tab, so we can safely assume that |tabs| is a non-empty array.
-    // A window can only have one active tab at a time, so the array consists of
-    // exactly one tab.
-    var tab = tabs[0];
+  chrome.tabs.query({active: true}, tabs => {
 
-    // A tab is a plain object that provides information about the tab.
-    // See https://developer.chrome.com/extensions/tabs#type-Tab
+    const tab = tabs[0];
     var url = tab.url;
-
-    // tab.url is only available if the 'activeTab' permission is declared.
-    // If you want to see the URL of other tabs (e.g. after removing active:true
-    // from |queryInfo|), then the 'tabs' permission is required to see their
-    // 'url' properties.
-    console.assert(typeof url == 'string', 'tab.url should be a string');
-
-    callback(url);
+    chrome.tabs.executeScript(tab.id, {
+      code: 'document.querySelector("#rightside .rightBox img").src'
+    }, (imageSrc) => {
+      callback(url, imageSrc, 'kek');
+    });
   });
-
-  // Most methods of the Chrome extension APIs are asynchronous. This means that
-  // you CANNOT do something like this:
-  //
-  // var url;
-  // chrome.tabs.query(queryInfo, (tabs) => {
-  //   url = tabs[0].url;
-  // });
-  // alert(url); // Shows 'undefined', because chrome.tabs.query is async.
 }
 
 /**
@@ -95,14 +70,14 @@ function saveBackgroundColor(url, color) {
   chrome.storage.sync.set(items);
 }
 
-function createNewItem(url) {
+function createNewItem(url, imageSrc, title) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('wrapper');
   const image = document.createElement('img');
-  image.src = 'http://readcomiconline.to/Uploads/Etc/4-12-2017/32567443071108.jpg';
+  image.src = imageSrc;
   const link = document.createElement('a');
   link.href = url;
-  link.text = 'Injustice added';
+  link.text = title;
   const trash = document.createElement('span');
   trash.classList.add('fa', 'fa-trash');
   wrapper.appendChild(image);
@@ -115,17 +90,12 @@ function handleAdd() {
   const addButton = document.getElementById('addCurrentComic');
   container = document.getElementsByClassName('container')[0];
   addButton.onclick = () => {
-    getCurrentTabUrl((url) => {
-      container.appendChild(createNewItem(url));
+    getCurrentTabInfos((url, imageSrc, title) => {
+      container.appendChild(createNewItem(url, imageSrc, title));
       handleDelete();
       handleNavigation();
     });
   }
-
-  getCurrentTabUrl((url) => {
-    const dropdown = document.getElementById('dropdown');
-
-  });
 }
 
 function handleNavigation() {
@@ -158,23 +128,4 @@ document.addEventListener('DOMContentLoaded', () => {
   handleAdd();
   handleNavigation();
   handleDelete();
-  getCurrentTabUrl((url) => {
-    const dropdown = document.getElementById('dropdown');
-
-    // Load the saved background color for this page and modify the dropdown
-    // value, if needed.
-    getSavedBackgroundColor(url, (savedColor) => {
-      if (savedColor) {
-        changeBackgroundColor(savedColor);
-        dropdown.value = savedColor;
-      }
-    });
-
-    // Ensure the background color is changed and saved when the dropdown
-    // selection changes.
-    dropdown.addEventListener('change', () => {
-      changeBackgroundColor(dropdown.value);
-      saveBackgroundColor(url, dropdown.value);
-    });
-  });
 });

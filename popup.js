@@ -95,20 +95,30 @@ function saveBackgroundColor(url, color) {
   chrome.storage.sync.set(items);
 }
 
+function createNewItem(url) {
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('wrapper');
+  const image = document.createElement('img');
+  image.src = 'http://readcomiconline.to/Uploads/Etc/4-12-2017/32567443071108.jpg';
+  const link = document.createElement('a');
+  link.href = url;
+  link.text = 'Injustice added';
+  const trash = document.createElement('span');
+  trash.classList.add('fa', 'fa-trash');
+  wrapper.appendChild(image);
+  wrapper.appendChild(link);
+  wrapper.appendChild(trash);
+  return wrapper;
+}
+
 function handleAdd() {
   const addButton = document.getElementById('addCurrentComic');
-  container = document.getElementsByClassName('container');
+  container = document.getElementsByClassName('container')[0];
   addButton.onclick = () => {
     getCurrentTabUrl((url) => {
-      console.log(url, container);
-      const newComic = document.createElement(`
-        <div class="wrapper">
-          <img src="http://readcomiconline.to/Uploads/Etc/4-12-2017/32567443071108.jpg">
-          <a href="` + url + `">Batman</a>
-          <span class="fa fa-trash"></span>
-        </div>
-      `);
-      container.appendChild(newComic);
+      container.appendChild(createNewItem(url));
+      handleDelete();
+      handleNavigation();
     });
   }
 

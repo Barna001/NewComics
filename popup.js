@@ -4,14 +4,29 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   init();
+  tryRequest();
   handleAdd();
 })
+
+function tryRequest() {
+  const xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      const page = new DOMParser().parseFromString(xhr.responseText, 'text/html'); 
+      const date = page.querySelector('.listing tbody tr:nth-of-type(3) td:nth-of-type(2)').innerText;
+      console.log(new Date(date) < new Date());
+    }
+  };
+  xhr.open('GET', 'http://readcomiconline.to/Comic/Injustice-2', true);
+  xhr.send();
+}
 
 function init() {
   const comics = chrome.storage.sync.get(null, comics => {
     container = document.getElementsByClassName('container')[0];
     Object.keys(comics).forEach(id => {
       const comic = comics[id];
+
       container.appendChild(createNewComic(id, comic.url, comic.imageSrc, comic.title));
     });
     handleNavigation();

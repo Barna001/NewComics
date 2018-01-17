@@ -16,7 +16,9 @@
     },
     "permissions": [
       "activeTab",
-      "storage"
+      "storage",
+      "http://readcomiconline.to/*",
+      "https://readcomiconline.to/*"
     ],
     "icons": {
       "16": "icons/icon16.png",

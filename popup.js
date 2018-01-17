@@ -4,20 +4,19 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   init();
-  tryRequest();
   handleAdd();
 })
 
-function tryRequest() {
+function calculateDate(url, callback) {
   const xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState === 4 && xhr.status === 200) {
       const page = new DOMParser().parseFromString(xhr.responseText, 'text/html'); 
       const date = page.querySelector('.listing tbody tr:nth-of-type(3) td:nth-of-type(2)').innerText;
-      console.log(new Date(date) < new Date());
+      callback(date, new Date(date) < new Date());
     }
   };
-  xhr.open('GET', 'http://readcomiconline.to/Comic/Injustice-2', true);
+  xhr.open('GET', url, true);
   xhr.send();
 }
 
@@ -26,8 +25,14 @@ function init() {
     container = document.getElementsByClassName('container')[0];
     Object.keys(comics).forEach(id => {
       const comic = comics[id];
-
-      container.appendChild(createNewComic(id, comic.url, comic.imageSrc, comic.title));
+      const comicDOM = createNewComic(id, comic.url, comic.imageSrc, comic.title);
+      container.appendChild(comicDOM);
+      calculateDate(comic.url, (date, isNewComicPresent) => {
+        if (isNewComicPresent) {
+          console.log(date);
+          console.log(new Date(date) < new Date());
+        };
+      });
     });
     handleNavigation();
     handleDelete();
@@ -50,9 +55,11 @@ function createNewComic(id, url, imageSrc, title) {
   const wrapper = createWrapper(id);
   const image = createImage(imageSrc);
   const link = createLink(url, title);
+  const sign = createSign();
   const trash = createTrash();
   wrapper.appendChild(image);
   wrapper.appendChild(link);
+  wrapper.appendChild(sign);
   wrapper.appendChild(trash);
   return wrapper;
 }
@@ -133,6 +140,13 @@ function createLink(url, title) {
   link.href = url;
   link.text = title;
   return link;
+}
+
+function createSign() {
+  const sign = document.createElement('span');
+  sign.textContent = '!';
+  sign.classList.add('red');
+  return sign;
 }
 
 function createTrash() {

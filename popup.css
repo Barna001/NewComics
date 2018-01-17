@@ -32,7 +32,7 @@ img {
 
 .wrapper {
   display: grid;
-  grid-template-columns: 50px 150px 30px;
+  grid-template-columns: 50px 150px 20px 30px;
   padding-bottom: 10px;
 }
 
@@ -63,4 +63,16 @@ a {
 
 .margin-bottom {
   margin-bottom: 10px;
+}
+
+.red {
+  color: white;
+  background-color: red;
+  text-align: center;
+  padding-left: 0px;
+}
+
+.transparent {
+  color: transparent;
+  background-color: transparent;
 }

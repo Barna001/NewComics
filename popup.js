@@ -3,19 +3,31 @@
 // found in the LICENSE file.
 
 document.addEventListener('DOMContentLoaded', () => {
+  init();
   handleAdd();
-  handleNavigation();
-  handleDelete();
-});
+})
+
+function init() {
+  const comics = chrome.storage.sync.get(null, comics => {
+    console.log('COMICS', comics);
+    container = document.getElementsByClassName('container')[0];
+    Object.keys(comics).forEach(id => {
+      const comic = comics[id];
+      container.appendChild(createNewComic(id, comic.url, comic.imageSrc, comic.title));
+    });
+    handleDelete();
+    handleNavigation();
+  });
+}
 
 function handleAdd() {
   const addButton = document.getElementById('addCurrentComic');
   container = document.getElementsByClassName('container')[0];
   addButton.onclick = () => {
     getCurrentTabInfos((url, imageSrc, title) => {
-      container.appendChild(createNewItem(url, imageSrc, title));
-      handleDelete();
-      handleNavigation();
+      const newComic = createNewComic(Math.random(), url, imageSrc, title);
+      container.appendChild(newComic);
+      saveNewComic(newComic.id, url, imageSrc, title);
     });
   }
 }
@@ -41,6 +53,7 @@ function handleDelete() {
       trash.onclick = function () {
         const removable = trash.parentNode;
         removable.parentNode.removeChild(removable);
+        chrome.storage.sync.remove(removable.id);
       };
     })();
   }
@@ -64,8 +77,21 @@ function getTitle(url) {
   return url.substring(url.indexOf('/Comic/') + 7, url.length);
 }
 
-function createNewItem(url, imageSrc, title) {
-  const wrapper = createWrapper();
+function saveNewComic(id, url, imageSrc, title) {
+  let updates = {};
+  updates[id] = {
+    url,
+    imageSrc,
+    title
+  };
+  chrome.storage.sync.set(updates, () => {
+    handleDelete();
+    handleNavigation();
+  });
+}
+
+function createNewComic(id, url, imageSrc, title) {
+  const wrapper = createWrapper(id);
   const image = createImage(imageSrc);
   const link = createLink(url, title);
   const trash = createTrash();
@@ -75,9 +101,10 @@ function createNewItem(url, imageSrc, title) {
   return wrapper;
 }
 
-function createWrapper() {
+function createWrapper(id) { 
   const wrapper = document.createElement('div');
   wrapper.classList.add('wrapper');
+  wrapper.id = id;
   return wrapper;
 }
 

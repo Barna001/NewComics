@@ -2,24 +2,102 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/**
- * Get the current URL.
- *
- * @param {function(string)} callback called when the URL of the current tab
- *   is found.
- */
+document.addEventListener('DOMContentLoaded', () => {
+  handleAdd();
+  handleNavigation();
+  handleDelete();
+});
+
+function handleAdd() {
+  const addButton = document.getElementById('addCurrentComic');
+  container = document.getElementsByClassName('container')[0];
+  addButton.onclick = () => {
+    getCurrentTabInfos((url, imageSrc, title) => {
+      container.appendChild(createNewItem(url, imageSrc, title));
+      handleDelete();
+      handleNavigation();
+    });
+  }
+}
+
+function handleNavigation() {
+  const links = document.getElementsByTagName('a');
+  for (let i = 0; i < links.length; i++) {
+    (() => {
+      const ln = links[i];
+      const location = ln.href;
+      ln.onclick = () => {
+          chrome.tabs.create({active: true, url: location});
+      };
+    })();
+  }
+}
+
+function handleDelete() {
+  const trashes = document.getElementsByClassName('fa-trash');
+  for (let i = 0; i < trashes.length; i++) {
+    (() => {
+      const trash = trashes[i];
+      trash.onclick = function () {
+        const removable = trash.parentNode;
+        removable.parentNode.removeChild(removable);
+      };
+    })();
+  }
+}
+
 function getCurrentTabInfos(callback) {
 
   chrome.tabs.query({active: true}, tabs => {
 
     const tab = tabs[0];
-    var url = tab.url;
+    const url = tab.url;
     chrome.tabs.executeScript(tab.id, {
       code: 'document.querySelector("#rightside .rightBox img").src'
     }, (imageSrc) => {
-      callback(url, imageSrc, 'kek');
+      callback(url, imageSrc, getTitle(url));
     });
   });
+}
+
+function getTitle(url) {
+  return url.substring(url.indexOf('/Comic/') + 7, url.length);
+}
+
+function createNewItem(url, imageSrc, title) {
+  const wrapper = createWrapper();
+  const image = createImage(imageSrc);
+  const link = createLink(url, title);
+  const trash = createTrash();
+  wrapper.appendChild(image);
+  wrapper.appendChild(link);
+  wrapper.appendChild(trash);
+  return wrapper;
+}
+
+function createWrapper() {
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('wrapper');
+  return wrapper;
+}
+
+function createImage(imageSrc) {
+  const image = document.createElement('img');
+  image.src = imageSrc;
+  return image;
+}
+
+function createLink(url, title) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.text = title;
+  return link;
+}
+
+function createTrash() {
+  const trash = document.createElement('span');
+  trash.classList.add('fa', 'fa-trash');
+  return trash;
 }
 
 /**
@@ -69,63 +147,3 @@ function saveBackgroundColor(url, color) {
   // background color is saved.
   chrome.storage.sync.set(items);
 }
-
-function createNewItem(url, imageSrc, title) {
-  const wrapper = document.createElement('div');
-  wrapper.classList.add('wrapper');
-  const image = document.createElement('img');
-  image.src = imageSrc;
-  const link = document.createElement('a');
-  link.href = url;
-  link.text = title;
-  const trash = document.createElement('span');
-  trash.classList.add('fa', 'fa-trash');
-  wrapper.appendChild(image);
-  wrapper.appendChild(link);
-  wrapper.appendChild(trash);
-  return wrapper;
-}
-
-function handleAdd() {
-  const addButton = document.getElementById('addCurrentComic');
-  container = document.getElementsByClassName('container')[0];
-  addButton.onclick = () => {
-    getCurrentTabInfos((url, imageSrc, title) => {
-      container.appendChild(createNewItem(url, imageSrc, title));
-      handleDelete();
-      handleNavigation();
-    });
-  }
-}
-
-function handleNavigation() {
-  const links = document.getElementsByTagName('a');
-  for (let i = 0; i < links.length; i++) {
-    (() => {
-      const ln = links[i];
-      const location = ln.href;
-      ln.onclick = () => {
-          chrome.tabs.create({active: true, url: location});
-      };
-    })();
-  }
-}
-
-function handleDelete() {
-  const trashes = document.getElementsByClassName('fa-trash');
-  for (let i = 0; i < trashes.length; i++) {
-    (() => {
-      const trash = trashes[i];
-      trash.onclick = function () {
-        const removable = trash.parentNode;
-        removable.parentNode.removeChild(removable);
-      };
-    })();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  handleAdd();
-  handleNavigation();
-  handleDelete();
-});

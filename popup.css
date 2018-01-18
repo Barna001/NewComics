@@ -69,4 +69,12 @@ a {
   width: 20px;
   height: 20px;
   padding-top: 22px;
+  opacity: 1;
+}
+
+.hideSign {
+  width: 20px;
+  height: 20px;
+  padding-top: 22px;
+  opacity: 0;
 }

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 document.addEventListener('DOMContentLoaded', () => {
+  // chrome.storage.sync.clear();
   init();
   handleAdd();
 })
@@ -12,8 +13,9 @@ function calculateDate(url, callback) {
   xhr.onreadystatechange = () => {
     if (xhr.readyState === 4 && xhr.status === 200) {
       const page = new DOMParser().parseFromString(xhr.responseText, 'text/html'); 
-      const date = page.querySelector('.listing tbody tr:nth-of-type(3) td:nth-of-type(2)').innerText;
-      callback(date, new Date(date) < new Date());
+      const dateOfNewestIssue = new Date(page.querySelector('.listing tbody tr:nth-of-type(3) td:nth-of-type(2)').innerText);
+      const previousClickDate = new Date();
+      callback(dateOfNewestIssue, dateOfNewestIssue > previousClickDate);
     }
   };
   xhr.open('GET', url, true);
@@ -32,10 +34,12 @@ function init() {
       const comic = comics[id];
       const comicDOM = createNewComic(id, comic.url, comic.imageSrc, comic.title);
       container.appendChild(comicDOM);
-      calculateDate(comic.url, (date, isNewComicPresent) => {
-        if (isNewComicPresent) {
-          console.log(date);
-          console.log(new Date(date) < new Date());
+      calculateDate(comic.url, (isNewComicPresent) => {
+        console.log('calculateDate', isNewComicPresent);
+        if (!isNewComicPresent) {
+          const sign = comicDOM.childNodes[2];
+          sign.classList.remove('hideSign');
+          sign.classList.add('showSign');
         };
       });
     });
@@ -72,13 +76,18 @@ function createNewComic(id, url, imageSrc, title) {
 function handleNavigation() {
   const links = document.getElementsByTagName('a');
   for (let i = 0; i < links.length; i++) {
-    (() => {
-      const ln = links[i];
-      const location = ln.href;
-      ln.onclick = () => {
-          chrome.tabs.create({active: true, url: location});
-      };
-    })();
+    const ln = links[i];
+    const location = ln.href;
+    ln.onclick = () => {
+      chrome.storage.sync.get(ln.parentNode.id, comic => {
+        console.log(comic[ln.parentNode.id].clickDate);
+        console.log(comic);
+        // comic.clickDate = new Date();
+        // chrome.storage.sync.set(date, () =>
+          chrome.tabs.create({active: true, url: location})
+        // );
+      });
+    };
   }
 }
 
@@ -104,8 +113,9 @@ function getCurrentTabInfos(callback) {
     const url = tab.url;
     chrome.tabs.executeScript(tab.id, {
       code: 'document.querySelector("#rightside .rightBox img").src'
-    }, (imageSrc) => {
-      callback(url, imageSrc, getTitle(url));
+    }, (imageSrcs) => {
+      console.log(imageSrcs[0]);
+      callback(url, imageSrcs[0], getTitle(url));
     });
   });
 }
@@ -119,7 +129,8 @@ function saveNewComic(id, url, imageSrc, title) {
   updates[id] = {
     url,
     imageSrc,
-    title
+    title,
+    clickDate: new Date().toString()
   };
   chrome.storage.sync.set(updates, () => {
     handleDelete();
@@ -150,7 +161,7 @@ function createLink(url, title) {
 function createSign() {
   const sign = document.createElement('img');
   sign.src = 'icons/exclamation-mark.png';
-  sign.classList.add('showSign');
+  sign.classList.add('hideSign');
   return sign;
 }
 

@@ -148,9 +148,9 @@ function createLink(url, title) {
 }
 
 function createSign() {
-  const sign = document.createElement('span');
-  sign.textContent = '!';
-  sign.classList.add('red');
+  const sign = document.createElement('img');
+  sign.src = 'icons/exclamation-mark.png';
+  sign.classList.add('showSign');
   return sign;
 }
 

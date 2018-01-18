@@ -65,14 +65,8 @@ a {
   margin-bottom: 10px;
 }
 
-.red {
-  color: white;
-  background-color: red;
-  text-align: center;
-  padding-left: 0px;
-}
-
-.transparent {
-  color: transparent;
-  background-color: transparent;
+.showSign {
+  width: 20px;
+  height: 20px;
+  padding-top: 22px;
 }

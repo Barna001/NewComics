@@ -21,6 +21,11 @@ function calculateDate(url, callback) {
 }
 
 function init() {
+  chrome.cookies.get({ url: 'http://readcomiconline.to', name: 'cf_clearance' }, (cookie) => {
+    if (!cookie) {
+      chrome.tabs.create({ url: 'http://readcomiconline.to'});
+    }
+  });
   const comics = chrome.storage.sync.get(null, comics => {
     container = document.getElementsByClassName('container')[0];
     Object.keys(comics).forEach(id => {

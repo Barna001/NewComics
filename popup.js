@@ -8,14 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
   handleAdd();
 })
 
-function calculateDate(url, callback) {
+function calculateDate(url, prevClickDateString, callback) {
   const xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState === 4 && xhr.status === 200) {
-      const page = new DOMParser().parseFromString(xhr.responseText, 'text/html'); 
+      const page = new DOMParser().parseFromString(xhr.responseText, 'text/html');
       const dateOfNewestIssue = new Date(page.querySelector('.listing tbody tr:nth-of-type(3) td:nth-of-type(2)').innerText);
-      const previousClickDate = new Date();
-      callback(dateOfNewestIssue, dateOfNewestIssue > previousClickDate);
+      const dateOfPrevClick = new Date(prevClickDateString);
+      callback(dateOfNewestIssue > dateOfPrevClick);
     }
   };
   xhr.open('GET', url, true);
@@ -34,9 +34,8 @@ function init() {
       const comic = comics[id];
       const comicDOM = createNewComic(id, comic.url, comic.imageSrc, comic.title);
       container.appendChild(comicDOM);
-      calculateDate(comic.url, (isNewComicPresent) => {
-        console.log('calculateDate', isNewComicPresent);
-        if (!isNewComicPresent) {
+      calculateDate(comic.url, comic.clickDate, (isNewComicPresent) => {
+        if (isNewComicPresent) {
           const sign = comicDOM.childNodes[2];
           sign.classList.remove('hideSign');
           sign.classList.add('showSign');
@@ -80,12 +79,13 @@ function handleNavigation() {
     const location = ln.href;
     ln.onclick = () => {
       chrome.storage.sync.get(ln.parentNode.id, comic => {
-        console.log(comic[ln.parentNode.id].clickDate);
-        console.log(comic);
-        // comic.clickDate = new Date();
-        // chrome.storage.sync.set(date, () =>
+        const comicData = comic[ln.parentNode.id];
+        comicData.clickDate = new Date().toString();
+        let updates = {};
+        updates[ln.parentNode.id] = comicData;
+        chrome.storage.sync.set(updates, () => {
           chrome.tabs.create({active: true, url: location})
-        // );
+        });
       });
     };
   }
@@ -111,16 +111,23 @@ function getCurrentTabInfos(callback) {
 
     const tab = tabs[0];
     const url = tab.url;
+    const title = getTitle(url);
+    if (title == null) {
+      return;
+    }
     chrome.tabs.executeScript(tab.id, {
       code: 'document.querySelector("#rightside .rightBox img").src'
     }, (imageSrcs) => {
-      console.log(imageSrcs[0]);
-      callback(url, imageSrcs[0], getTitle(url));
+      callback(url, imageSrcs[0], title);
     });
   });
 }
 
 function getTitle(url) {
+  if (url.indexOf('/Comic/') < 0) {
+    console.error('invalid url');
+    return null;
+  }
   return url.substring(url.indexOf('/Comic/') + 7, url.length);
 }
 
@@ -138,7 +145,7 @@ function saveNewComic(id, url, imageSrc, title) {
   });
 }
 
-function createWrapper(id) { 
+function createWrapper(id) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('wrapper');
   wrapper.id = id;
